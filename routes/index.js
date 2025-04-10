@@ -3,6 +3,7 @@ import { createSupabaseProject } from "./supabaseProject.js";
 import { executeSql } from "./executeSql.js";
 import { setupStorage } from "./setupStorage.js";
 import { createVercelProject, deployVercelRepo } from "./vercelProject.js";
+import { createUser } from "./createUser.js";
 
 const router = express.Router();
 
@@ -23,5 +24,8 @@ router.post("/setup-storage", setupStorage);
 // Vercel Deployment
 router.post("/create-vercel-project", createVercelProject);
 router.post("/deploy-vercel-repo", deployVercelRepo);
+
+// User Management
+router.post("/create-user", createUser);
 
 export default router;

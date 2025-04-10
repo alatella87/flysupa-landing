@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { type } from "node:os";
 
 export async function createVercelProject(req, res) {
   try {
@@ -53,13 +54,13 @@ export async function deployVercelRepo(req, res) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        projectId,
         name: schoolName,
         target: "production",
         gitSource: {
-          type: "github",
-          ref: "main",
-          repoId: "alatella87/flysupa",
+          org: 'alatella87',
+          ref: 'master',
+          repo: 'flysupa',
+          type: 'github'
         },
       }),
     });

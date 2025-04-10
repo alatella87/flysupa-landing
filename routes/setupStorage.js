@@ -1,5 +1,5 @@
 import pg from "pg";
-import { setupStorage as setupStorageBuckets } from "../src/services/setupStorage.ts";
+import { setupStorage as setupStorageBuckets } from "../src/services/setupStorage.js";
 
 const { Pool } = pg;
 
@@ -11,7 +11,10 @@ export async function setupStorage(req, res) {
       return res.status(400).json({ error: "Missing required parameters" });
     }
 
+    console.log("[SUPABASE STORAGE] 🚀 Starting storage setup process");
+    
     // Use the existing utility function to set up storage buckets
+    // Make sure supabaseKey is the service_role key, not anon key
     const storageResult = await setupStorageBuckets(supabaseUrl, supabaseKey);
     
     if (!storageResult.success) {

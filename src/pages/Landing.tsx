@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { setupStorage } from "../services/setupStorage";
 
 const Landing: React.FC = () => {
   const [output, setOutput] = useState<string>("");
@@ -8,6 +7,7 @@ const Landing: React.FC = () => {
     email: "",
     schoolName: "",
     fullName: "",
+    password: "",
   });
 
   const createSupabase = async (
@@ -21,7 +21,7 @@ const Landing: React.FC = () => {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/create-supabase-project",
+        "http://localhost:5174/create-supabase-project",
         {
           method: "POST",
           headers: {
@@ -54,7 +54,7 @@ const Landing: React.FC = () => {
 
   const executeSql = async (projectId: string, db_pass: string) => {
     try {
-      const response = await fetch("http://localhost:3000/executeSql", {
+      const response = await fetch("http://localhost:5174/executeSql", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -77,10 +77,42 @@ const Landing: React.FC = () => {
     }
   };
 
+  const createUser = async (supabaseUrl: string, serviceRoleKey: string) => {
+    try {
+      const response = await fetch("http://localhost:5174/create-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          supabaseUrl,
+          supabaseKey: serviceRoleKey,
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          admin: true,
+        }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        console.error("Error creating user:", error);
+        return null;
+      }
+      
+      const userData = await response.json();
+      console.log("✅ User created successfully:", userData);
+      return userData;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      return null;
+    }
+  };
+
   const createVercel = async (schoolName: string) => {
     try {
       const response = await fetch(
-        "http://localhost:3000/create-vercel-project",
+        "http://localhost:5174/create-vercel-project",
         {
           method: "POST",
           headers: {
@@ -121,7 +153,7 @@ const Landing: React.FC = () => {
 
   const deployVercel = async (projectId: string, schoolName: string) => {
     try {
-      const response = await fetch("http://localhost:3000/deploy-vercel-repo", {
+      const response = await fetch("http://localhost:5174/deploy-vercel-repo", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -161,9 +193,10 @@ const Landing: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    const newValue = name === "schoolName" ? value.toLowerCase() : value;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: newValue,
     }));
   };
 
@@ -194,14 +227,18 @@ const Landing: React.FC = () => {
       if (projectData) {
         // Step 2: Get API keys from the --> new project
         const supabaseProjectId = projectData.id;
+        console.log('response', projectData)
         const apiKeysResponse = await fetch(
-          `https://api.supabase.com/v1/projects/${supabaseProjectId}/api-keys`,
+          "http://localhost:5174/get-supabase-api-keys",
           {
-            method: "GET",
+            method: "POST",
             headers: {
-              Authorization: `Bearer ${apiKey}`,
               "Content-Type": "application/json",
             },
+            body: JSON.stringify({
+              apiKey,
+              projectId: supabaseProjectId
+            }),
           }
         );
 
@@ -224,16 +261,13 @@ const Landing: React.FC = () => {
         }
 
         // Step 3: Execute the SQL schema on the new project
-        const schemaResult = await executeSql(
-          supabaseProjectId,
-          db_pass
-        );
+        const schemaResult = await executeSql(supabaseProjectId, db_pass);
 
         // Step 4: Set up storage buckets and policies
         const supabaseUrl = `https://${supabaseProjectId}.supabase.co`;
-        
+
         // Set up storage buckets
-        await fetch("http://localhost:3000/setup-storage", {
+        const storageResponse = await fetch("http://localhost:5174/setup-storage", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -242,15 +276,30 @@ const Landing: React.FC = () => {
             supabaseUrl,
             supabaseKey: anonKey,
             db_pass,
-            projectId: supabaseProjectId
+            projectId: supabaseProjectId,
           }),
         });
+        
+        if (storageResponse.ok) {
+          // Step 5: Create the first user
+          // Get service role key for admin operations
+          const serviceRoleKey = apiKeysData.find(
+            (key: { name: string }) => key.name === "service_role"
+          )?.api_key;
+          
+          if (serviceRoleKey) {
+            const userData = await createUser(supabaseUrl, serviceRoleKey);
+            console.log("User creation result:", userData);
+          } else {
+            console.error("Service role key not found, cannot create user");
+          }
+        }
 
-        // Step 5: Create Vercel project after schema execution
+        // Step 6: Create Vercel project after schema execution
         if (schemaResult) {
           const vercelProjectData = await createVercel(formData.schoolName);
 
-          // Step 6: Deploy Vercel project if it was created successfully
+          // Step 7: Deploy Vercel project if it was created successfully
           if (vercelProjectData && vercelProjectData.id) {
             await deployVercel(vercelProjectData.id, schoolName);
           }
@@ -292,12 +341,24 @@ const Landing: React.FC = () => {
           />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-4">
           <label className="block text-gray-700 mb-1">Full Name</label>
           <input
             type="text"
             name="fullName"
             value={formData.fullName}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded bg-transparent"
+            required
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-gray-700 mb-1">Password</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
             onChange={handleInputChange}
             className="w-full p-2 border rounded bg-transparent"
             required

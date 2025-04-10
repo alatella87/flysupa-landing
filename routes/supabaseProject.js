@@ -26,10 +26,11 @@ export async function createSupabaseProject(req, res) {
         .json({ error: "Error creating project", details: error });
     }
 
-    res.json(await response.json());
+    const projectData = await response.json();
+    res.json(projectData);
     console.log(
       "[SUPABASE] ✅ Project created successfully",
-      await response.json()
+      projectData
     );
   } catch (error) {
     res.status(500).json({
