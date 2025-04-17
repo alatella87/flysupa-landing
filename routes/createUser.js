@@ -23,6 +23,7 @@ export const createUser = async (req, res) => {
       const { data: userData, error: userError } = await supabase.auth.admin.createUser({
         email,
         password,
+        admin: true,
         email_confirm: true, // Auto-confirm the email
         user_metadata: {
           full_name: fullName

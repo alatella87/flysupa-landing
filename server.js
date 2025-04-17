@@ -284,7 +284,7 @@ app.post("/create-vercel-project", async (req, res) => {
         gitRepository: {
           type: "github",
           repo: `alatella87/flysupa`,
-          ref: "dev",
+          ref: "master",
         },
       }),
     });

@@ -90,16 +90,15 @@ const Landing: React.FC = () => {
           email: formData.email,
           password: formData.password,
           fullName: formData.fullName,
-          admin: true,
         }),
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         console.error("Error creating user:", error);
         return null;
       }
-      
+
       const userData = await response.json();
       console.log("✅ User created successfully:", userData);
       return userData;
@@ -151,6 +150,39 @@ const Landing: React.FC = () => {
     }
   };
 
+  const setEnvironmentVariables = async (projectId: string, supabaseUrl: string, anonKey: string) => {
+    try {
+      const response = await fetch(
+        `https://api.vercel.com/v10/projects/${projectId}/env`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer mvIj6EnxXpfiVUQ89oMmZ2lr`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify([
+            {
+              key: "VITE_SUPABASE_URL",
+              value: supabaseUrl,
+              type: 'plain',
+              target: ['production']
+            },
+            {
+              key: "VITE_SUPABASE_ANON_KEY",
+              value: anonKey,
+              type: 'plain',
+              target: ['production']
+            }
+          ]),
+        }
+      );
+      return response.ok;
+    } catch (error) {
+      console.error("Error setting env vars:", error);
+      return false;
+    }
+  };
+
   const deployVercel = async (projectId: string, schoolName: string) => {
     try {
       const response = await fetch("http://localhost:5174/deploy-vercel-repo", {
@@ -192,7 +224,8 @@ const Landing: React.FC = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+    // deno-lint-ignore no-explicit-any
+    const { name, value } = e.target as any;
     const newValue = name === "schoolName" ? value.toLowerCase() : value;
     setFormData((prevData) => ({
       ...prevData,
@@ -227,7 +260,7 @@ const Landing: React.FC = () => {
       if (projectData) {
         // Step 2: Get API keys from the --> new project
         const supabaseProjectId = projectData.id;
-        console.log('response', projectData)
+        console.log("response", projectData);
         const apiKeysResponse = await fetch(
           "http://localhost:5174/get-supabase-api-keys",
           {
@@ -237,7 +270,7 @@ const Landing: React.FC = () => {
             },
             body: JSON.stringify({
               apiKey,
-              projectId: supabaseProjectId
+              projectId: supabaseProjectId,
             }),
           }
         );
@@ -267,26 +300,29 @@ const Landing: React.FC = () => {
         const supabaseUrl = `https://${supabaseProjectId}.supabase.co`;
 
         // Set up storage buckets
-        const storageResponse = await fetch("http://localhost:5174/setup-storage", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            supabaseUrl,
-            supabaseKey: anonKey,
-            db_pass,
-            projectId: supabaseProjectId,
-          }),
-        });
-        
-        if (storageResponse.ok) {
+        const storageResponse = await fetch(
+          "http://localhost:5174/setup-storage",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              supabaseUrl,
+              supabaseKey: anonKey,
+              db_pass,
+              projectId: supabaseProjectId,
+            }),
+          }
+        );
+
+          if (storageResponse.ok) {
           // Step 5: Create the first user
           // Get service role key for admin operations
           const serviceRoleKey = apiKeysData.find(
             (key: { name: string }) => key.name === "service_role"
           )?.api_key;
-          
+
           if (serviceRoleKey) {
             const userData = await createUser(supabaseUrl, serviceRoleKey);
             console.log("User creation result:", userData);
@@ -295,13 +331,16 @@ const Landing: React.FC = () => {
           }
         }
 
-        // Step 6: Create Vercel project after schema execution
+        // Step 6: Create Vercel + env variables project after schema execution
         if (schemaResult) {
           const vercelProjectData = await createVercel(formData.schoolName);
 
+          const setEnvVariables = await setEnvironmentVariables(vercelProjectData.id, supabaseUrl, anonKey );
+          
           // Step 7: Deploy Vercel project if it was created successfully
-          if (vercelProjectData && vercelProjectData.id) {
+          if (vercelProjectData && vercelProjectData.id && setEnvVariables) {
             await deployVercel(vercelProjectData.id, schoolName);
+            console.log(setEnvVariables)
           }
         }
       }
@@ -313,75 +352,77 @@ const Landing: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 rounded shadow-lg">
-      <h1 className="text-2xl font-bold mb-6">Create School Project</h1>
+    <>
+      <div className="max-w-md mx-auto mt-10 p-6 rounded shadow-lg">
+        <h1 className="text-2xl font-bold mb-6">Create School Project</h1>
+        <form onSubmit={handleClick}>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded bg-transparent"
+              required
+            />
+          </div>
 
-      <form onSubmit={handleClick}>
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Email</label>
-          <input
-            type="email"
-            name="email"
-            value={formData.email}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded bg-transparent"
-            required
-          />
-        </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-1">School Name</label>
+            <input
+              type="text"
+              name="schoolName"
+              value={formData.schoolName}
+              onChange={handleInputChange}
+              className="w-full p-2 border bg-transparent rounded"
+              required
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">School Name</label>
-          <input
-            type="text"
-            name="schoolName"
-            value={formData.schoolName}
-            onChange={handleInputChange}
-            className="w-full p-2 border bg-transparent rounded"
-            required
-          />
-        </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-1">Full Name</label>
+            <input
+              type="text"
+              name="fullName"
+              value={formData.fullName}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded bg-transparent"
+              required
+            />
+          </div>
 
-        <div className="mb-4">
-          <label className="block text-gray-700 mb-1">Full Name</label>
-          <input
-            type="text"
-            name="fullName"
-            value={formData.fullName}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded bg-transparent"
-            required
-          />
-        </div>
+          <div className="mb-6">
+            <label className="block text-gray-700 mb-1">Password</label>
+            <input
+              autoComplete="true"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded bg-transparent"
+              required
+            />
+          </div>
 
-        <div className="mb-6">
-          <label className="block text-gray-700 mb-1">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleInputChange}
-            className="w-full p-2 border rounded bg-transparent"
-            required
-          />
-        </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
+            disabled={loading}>
+            {loading ? "Creating..." : "Create Project"}
+          </button>
+        </form>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition-colors"
-          disabled={loading}>
-          {loading ? "Creating..." : "Create Project"}
-        </button>
-      </form>
-
-      {output && (
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-2">Output:</h2>
-          <pre className="bg-gray-100 p-3 rounded overflow-auto max-h-60 text-sm">
-            {output}
-          </pre>
-        </div>
-      )}
-    </div>
+        {output && (
+          <div className="mt-6">
+            <h2 className="text-lg font-semibold mb-2">Output:</h2>
+            <pre className="bg-gray-100 p-3 rounded overflow-auto max-h-60 text-sm">
+              {output}
+            </pre>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

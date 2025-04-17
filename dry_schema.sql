@@ -500,70 +500,70 @@ ALTER TABLE storage.buckets DISABLE ROW LEVEL SECURITY;
 CREATE OR REPLACE FUNCTION setup_storage_policies()
 RETURNS void AS $$
 BEGIN
-  -- Create a policy for users to read their own avatars
+  -- Create a policy for users to read avatars (any authenticated user)
   BEGIN
     EXECUTE format('
-      CREATE POLICY "Users can read their own avatars" ON storage.objects
-      FOR SELECT USING (bucket_id = ''avatars'' AND auth.uid()::text = (storage.foldername(name))[1]);
+      CREATE POLICY "Authenticated users can read avatars" ON storage.objects
+      FOR SELECT USING (bucket_id = ''avatars'' AND auth.role() = ''authenticated'');
     ');
   EXCEPTION
     WHEN duplicate_object THEN
-      RAISE NOTICE 'Policy "Users can read their own avatars" already exists, skipping...';
+      RAISE NOTICE 'Policy "Authenticated users can read avatars" already exists, skipping...';
   END;
   
-  -- Create a policy for users to insert their own avatars
+  -- Create a policy for users to upload avatars (any authenticated user)
   BEGIN
     EXECUTE format('
-      CREATE POLICY "Users can upload their own avatars" ON storage.objects
-      FOR INSERT WITH CHECK (bucket_id = ''avatars'' AND auth.uid()::text = (storage.foldername(name))[1]);
+      CREATE POLICY "Authenticated users can upload avatars" ON storage.objects
+      FOR INSERT WITH CHECK (bucket_id = ''avatars'' AND auth.role() = ''authenticated'');
     ');
   EXCEPTION
     WHEN duplicate_object THEN
-      RAISE NOTICE 'Policy "Users can upload their own avatars" already exists, skipping...';
+      RAISE NOTICE 'Policy "Authenticated users can upload avatars" already exists, skipping...';
   END;
   
-  -- Create a policy for users to update their own avatars
+  -- Create a policy for users to update avatars (any authenticated user)
   BEGIN
     EXECUTE format('
-      CREATE POLICY "Users can update their own avatars" ON storage.objects
-      FOR UPDATE USING (bucket_id = ''avatars'' AND auth.uid()::text = (storage.foldername(name))[1]);
+      CREATE POLICY "Authenticated users can update avatars" ON storage.objects
+      FOR UPDATE USING (bucket_id = ''avatars'' AND auth.role() = ''authenticated'');
     ');
   EXCEPTION
     WHEN duplicate_object THEN
-      RAISE NOTICE 'Policy "Users can update their own avatars" already exists, skipping...';
+      RAISE NOTICE 'Policy "Authenticated users can update avatars" already exists, skipping...';
   END;
   
-  -- Create a policy for users to read their own licenses
+  -- Create a policy for users to read licenses (any authenticated user)
   BEGIN
     EXECUTE format('
-      CREATE POLICY "Users can read their own licenses" ON storage.objects
-      FOR SELECT USING (bucket_id = ''licenses'' AND auth.uid()::text = (storage.foldername(name))[1]);
+      CREATE POLICY "Authenticated users can read licenses" ON storage.objects
+      FOR SELECT USING (bucket_id = ''licenses'' AND auth.role() = ''authenticated'');
     ');
   EXCEPTION
     WHEN duplicate_object THEN
-      RAISE NOTICE 'Policy "Users can read their own licenses" already exists, skipping...';
+      RAISE NOTICE 'Policy "Authenticated users can read licenses" already exists, skipping...';
   END;
   
-  -- Create a policy for users to insert their own licenses
+  -- Create a policy for users to upload licenses (any authenticated user)
   BEGIN
     EXECUTE format('
-      CREATE POLICY "Users can upload their own licenses" ON storage.objects
-      FOR INSERT WITH CHECK (bucket_id = ''licenses'' AND auth.uid()::text = (storage.foldername(name))[1]);
+      CREATE POLICY "Authenticated users can upload licenses" ON storage.objects
+      FOR INSERT WITH CHECK (bucket_id = ''licenses'' AND auth.role() = ''authenticated'');
     ');
   EXCEPTION
     WHEN duplicate_object THEN
-      RAISE NOTICE 'Policy "Users can upload their own licenses" already exists, skipping...';
+      RAISE NOTICE 'Policy "Authenticated users can upload licenses" already exists, skipping...';
   END;
   
-  -- Create a policy for users to update their own licenses
+  -- Create a policy for users to update licenses (any authenticated user)
   BEGIN
     EXECUTE format('
-      CREATE POLICY "Users can update their own licenses" ON storage.objects
-      FOR UPDATE USING (bucket_id = ''licenses'' AND auth.uid()::text = (storage.foldername(name))[1]);
+      CREATE POLICY "Authenticated users can update licenses" ON storage.objects
+      FOR UPDATE USING (bucket_id = ''licenses'' AND auth.role() = ''authenticated'');
     ');
   EXCEPTION
     WHEN duplicate_object THEN
-      RAISE NOTICE 'Policy "Users can update their own licenses" already exists, skipping...';
+      RAISE NOTICE 'Policy "Authenticated users can update licenses" already exists, skipping...';
   END;
 END;
 $$ LANGUAGE plpgsql;
