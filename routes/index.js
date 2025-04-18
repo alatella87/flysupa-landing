@@ -4,6 +4,7 @@ import { executeSql } from "./executeSql.js";
 import { setupStorage } from "./setupStorage.js";
 import { createVercelProject, deployVercelRepo } from "./vercelProject.js";
 import { createUser } from "./createUser.js";
+import { addSubdomain } from "./addSubdomain.js";
 
 const router = express.Router();
 
@@ -27,5 +28,8 @@ router.post("/deploy-vercel-repo", deployVercelRepo);
 
 // User Management
 router.post("/create-user", createUser);
+
+// Vercel Subdomain
+router.post("/vercel-add-subdomain", addSubdomain)
 
 export default router;

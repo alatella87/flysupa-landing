@@ -96,7 +96,7 @@ app.post("/get-supabase-api-keys", async (req, res) => {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${req.body.apiKey}`,
           "Content-Type": "application/json",
         },
       }
@@ -284,7 +284,7 @@ app.post("/create-vercel-project", async (req, res) => {
         gitRepository: {
           type: "github",
           repo: `alatella87/flysupa`,
-          ref: "master",
+          ref: "main",
         },
       }),
     });
@@ -327,7 +327,7 @@ app.post("/deploy-vercel-repo", async (req, res) => {
         },
         gitSource: {
           org: 'alatella87',
-          ref: 'master',
+          ref: 'main',
           repo: 'flysupa',
           type: 'github',
         },

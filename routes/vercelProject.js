@@ -58,7 +58,7 @@ export async function deployVercelRepo(req, res) {
         target: "production",
         gitSource: {
           org: 'alatella87',
-          ref: 'master',
+          ref: 'main',
           repo: 'flysupa',
           type: 'github'
         },

@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export const createUser = async (req, res) => {
   try {
-    const { supabaseUrl, supabaseKey, email, password, fullName } = req.body;
+    const { supabaseUrl, supabaseKey, email, password } = req.body;
 
     if (!supabaseUrl || !supabaseKey || !email || !password) {
       return res.status(400).json({ error: "Missing required parameters" });
@@ -25,9 +25,6 @@ export const createUser = async (req, res) => {
         password,
         admin: true,
         email_confirm: true, // Auto-confirm the email
-        user_metadata: {
-          full_name: fullName
-        }
       });
       
       if (userError) {
