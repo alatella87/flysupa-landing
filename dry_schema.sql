@@ -173,6 +173,18 @@ CREATE TABLE public.lessons_items (
     description text
 );
 
+INSERT INTO public.lessons_items (id, title, description) VALUES
+(1, 'Posizione di guida/Dispositivi di guida', NULL),
+(2, 'Tecnica osservazione/specchietti', NULL),
+(3, 'Maneggio del volante', NULL),
+(4, 'Uso acceleratore', NULL),
+(5, 'Uso del freno', NULL),
+(6, 'Uso della frizione', NULL),
+(7, 'Cambio marce/scelta marcia', NULL),
+(8, 'Assicurare il veicolo', NULL),
+(9, 'Scalare marcia con/senza freno', NULL),
+(10, 'Partenza salita/discesa', NULL),
+
 
 --
 -- Name: lesson_item_details_view; Type: VIEW; Schema: public; Owner: -
